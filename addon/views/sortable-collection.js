@@ -77,7 +77,7 @@ export default Ember.CollectionView.extend({
   _triggerSorting: Ember.on('didInsertElement', Ember.observer(
     'sortProperties.@each', 'sortAscending', 'sortFunction', 'content.[]',
     function () {
-      Ember.run.once(this, '_applySortOrder');
+      Ember.run.debounce(this, '_applySortOrder', 10);
     }
   )),
 
