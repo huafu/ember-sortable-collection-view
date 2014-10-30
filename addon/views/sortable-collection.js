@@ -62,6 +62,13 @@ export default Ember.CollectionView.extend({
   },
 
   /**
+   * We need to know when we can or can't sort elements
+   * @property _canSortElements
+   * @type Boolean
+   */
+  _canSortElements: false,
+
+  /**
    * Listen for elements which would need to trigger the sorting again
    * TODO: do this intelligent, listening for added/removed items, etc...
    *
@@ -73,6 +80,14 @@ export default Ember.CollectionView.extend({
       Ember.run.once(this, '_applySortOrder');
     }
   )),
+
+  _disableSorting: Ember.beforeObserver('childViews', 'content', function () {
+    this.set('_canSortElements', false);
+  }),
+
+  _enableSorting: Ember.on('init', Ember.observer('childViews', 'content', function () {
+    this.set('_canSortElements', true);
+  })),
 
 
   /**
@@ -88,6 +103,9 @@ export default Ember.CollectionView.extend({
     var childViews = this.get('childViews');
     var sortingArray = [];
     for (var i = 0; i < content.length; i++) {
+      if(!childViews[i].get('element')){
+        return [];
+      }
       sortingArray.push({
         hash: Ember.getProperties(content[i], sortProperties),
         view: childViews[i]
@@ -104,9 +122,12 @@ export default Ember.CollectionView.extend({
    */
   _applySortOrder: function () {
     var sortingArray, parentNode, sortedArray, sortAscending, keys, sortFunction, self;
+    if (!this.get('_canSortElements')) {
+      return;
+    }
     if (this._state !== 'inDOM') {
       // we aren't in the DOM, let's schedule the sort after we're rendered
-      Ember.run.scheduleOnce('afterRender', this, 'applySortOrder');
+      Ember.run.scheduleOnce('afterRender', this, '_applySortOrder');
     }
     else {
       self = this;
@@ -129,5 +150,5 @@ export default Ember.CollectionView.extend({
         parentNode.appendChild(sortedArray[i].view.get('element'));
       }
     }
-  },
+  }
 });
