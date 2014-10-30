@@ -87,6 +87,7 @@ export default Ember.CollectionView.extend({
 
   _enableSorting: Ember.on('init', Ember.observer('childViews', 'content', function () {
     this.set('_canSortElements', true);
+    this._triggerSorting();
   })),
 
 
